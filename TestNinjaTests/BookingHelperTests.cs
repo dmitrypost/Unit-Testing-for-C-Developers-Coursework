@@ -101,5 +101,81 @@ namespace TestNinjaTests
             //Assert
             Assert.That(result, Is.EqualTo(ExistingBookings[0].Reference));
         }
+
+        [Test]
+        public void OverlappingBookingsExist_BookingStartsAndFinishesInTheMiddleOfExistingBooking_ReturnsBookingReference()
+        {
+            //Arrange
+            var booking = new Booking
+            {
+                Id = 3,
+                ArrivalDate = DaysAfter(ExistingBookings[0].ArrivalDate),
+                DepartureDate = DaysBefore(ExistingBookings[0].DepartureDate),
+
+            };
+
+            //Act
+            var result = BookingHelper.OverlappingBookingsExist(_repository, booking);
+
+            //Assert
+            Assert.That(result, Is.EqualTo(ExistingBookings[0].Reference));
+        }
+        
+        [Test]
+        public void OverlappingBookingsExist_BookingStartsInTheMiddleOfExistingBookingButFinishesAfter_ReturnsBookingReference()
+        {
+            //Arrange
+            var booking = new Booking
+            {
+                Id = 3,
+                ArrivalDate = DaysAfter(ExistingBookings[0].ArrivalDate),
+                DepartureDate = DaysAfter(ExistingBookings[0].DepartureDate),
+
+            };
+
+            //Act
+            var result = BookingHelper.OverlappingBookingsExist(_repository, booking);
+
+            //Assert
+            Assert.That(result, Is.EqualTo(ExistingBookings[0].Reference));
+        }
+        
+        [Test]
+        public void OverlappingBookingsExist_BookingStartsAndFinishesAfterExistingBooking_ReturnsBookingReference()
+        {
+            //Arrange
+            var booking = new Booking
+            {
+                Id = 3,
+                ArrivalDate = DaysAfter(ExistingBookings[0].DepartureDate),
+                DepartureDate = DaysAfter(ExistingBookings[0].DepartureDate, 2),
+
+            };
+
+            //Act
+            var result = BookingHelper.OverlappingBookingsExist(_repository, booking);
+
+            //Assert
+            Assert.That(result, Is.Empty);
+        }       
+        
+        [Test]
+        public void OverlappingBookingsExist_CancelledBookingStartsInTheMiddleOfExistingBooking_ReturnsBookingReference()
+        {
+            //Arrange
+            var booking = new Booking
+            {
+                Id = 3,
+                ArrivalDate = DaysAfter(ExistingBookings[0].ArrivalDate),
+                DepartureDate = DaysAfter(ExistingBookings[0].DepartureDate),
+                Status = "Cancelled"
+            };
+
+            //Act
+            var result = BookingHelper.OverlappingBookingsExist(_repository, booking);
+
+            //Assert
+            Assert.That(result, Is.Empty);
+        }
     }
 }

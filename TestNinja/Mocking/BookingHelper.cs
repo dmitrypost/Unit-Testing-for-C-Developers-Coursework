@@ -6,30 +6,55 @@ namespace TestNinja.Mocking
 {
     public static class BookingHelper
     {
-        public static string OverlappingBookingsExist(Booking booking)
+        public static string OverlappingBookingsExist(IBookingRepository repository, Booking booking)
         {
-            if (booking.Status == "Cancelled")
-                return string.Empty;
+            if (booking.Status == "Cancelled") return string.Empty;
 
-            var unitOfWork = new UnitOfWork();
-            var bookings =
-                unitOfWork.Query<Booking>()
-                    .Where(
-                        b => b.Id != booking.Id && b.Status != "Cancelled");
-
-            var overlappingBooking =
-                bookings.FirstOrDefault(
-                    b =>
-                        booking.ArrivalDate >= b.ArrivalDate
-                        && booking.ArrivalDate < b.DepartureDate
-                        || booking.DepartureDate > b.ArrivalDate
-                        && booking.DepartureDate <= b.DepartureDate);
+            var activeBookings = repository.GetActiveBookings(booking.Id);
+            
+            var overlappingBooking = activeBookings.GetOverlappingBooking(booking);
 
             return overlappingBooking == null ? string.Empty : overlappingBooking.Reference;
         }
     }
 
-    public class UnitOfWork
+    public static class QueryableBookingExtensions
+    {
+        public static Booking GetOverlappingBooking(this IQueryable<Booking> bookings, Booking booking)
+        {
+            return bookings.FirstOrDefault(b => 
+                booking.ArrivalDate < b.DepartureDate && b.ArrivalDate < booking.DepartureDate);
+        }
+    }
+
+    public interface IBookingRepository
+    {
+        IQueryable<Booking> GetActiveBookings(int? excludeBookingId = null);
+    }
+
+    public class BookingRepository : IBookingRepository
+    {
+        private readonly IUnitOfWork _unitOfWork;
+
+        public BookingRepository(IUnitOfWork unitOfWork)
+        {
+            _unitOfWork = unitOfWork;
+        }
+
+        public IQueryable<Booking> GetActiveBookings(int? excludeBookingId = null)
+        {
+            var bookings = _unitOfWork.Query<Booking>().Where(b => b.Status != "Cancelled");
+
+            return excludeBookingId.HasValue ? bookings.Where(x => x.Id != excludeBookingId.Value) : bookings;
+        }
+    }
+
+    public interface IUnitOfWork
+    {
+        IQueryable<T> Query<T>();
+    }
+
+    public class UnitOfWork : IUnitOfWork
     {
         public IQueryable<T> Query<T>()
         {

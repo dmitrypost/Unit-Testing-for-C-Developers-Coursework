@@ -17,7 +17,7 @@ namespace TestNinja.Fundamentals
         
         public static PhoneNumber Parse(string number)
         {
-            if (String.IsNullOrWhiteSpace(number))
+            if (string.IsNullOrWhiteSpace(number))
                 throw new ArgumentException("Phone number cannot be blank.");
             
             if (number.Length != 10)
@@ -32,7 +32,7 @@ namespace TestNinja.Fundamentals
 
         public override string ToString()
         {
-            return String.Format($"({Area}){Major}-{Minor}");
+            return $"({Area}){Major}-{Minor}";
         }
     }
 }

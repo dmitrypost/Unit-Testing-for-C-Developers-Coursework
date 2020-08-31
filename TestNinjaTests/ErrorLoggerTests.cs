@@ -18,7 +18,7 @@ namespace TestNinjaTests
             Assert.Throws<ArgumentNullException>(() => logger.Log(error));
         }
 
-        [TestCase("fdsafdsaf")]
+        [TestCase("error occurred")]
         public void Log_GivenErrorMessage_ExpectsErrorMessage(string errorMessage)
         {
             var logger = new ErrorLogger();

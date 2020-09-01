@@ -1,21 +1,23 @@
-﻿using System.Data.Entity;
+﻿using System.Collections.Generic;
+using System.Data.Entity;
+using System.Linq;
 
 namespace TestNinja.Mocking
 {
     public class EmployeeController
     {
-        private EmployeeContext _db;
+        private readonly IEmployeeRepository _repository;
 
-        public EmployeeController()
+        public EmployeeController(IEmployeeRepository repository)
         {
-            _db = new EmployeeContext();
+            _repository = repository;
         }
 
         public ActionResult DeleteEmployee(int id)
         {
-            var employee = _db.Employees.Find(id);
-            _db.Employees.Remove(employee);
-            _db.SaveChanges();
+            var employee = _repository.GetById(id);
+            if (employee == null) return new NotFoundResult();
+            _repository.Delete(employee);
             return RedirectToAction("Employees");
         }
 
@@ -25,11 +27,51 @@ namespace TestNinja.Mocking
         }
     }
 
+    public class NotFoundResult : ActionResult { }
     public class ActionResult { }
  
     public class RedirectResult : ActionResult { }
+
+    public interface IEmployeeRepository
+    {
+        Employee GetById(int id);
+        void Delete(Employee employee);
+        IEnumerable<Employee> GetAll();
+    }
+
+    public class EmployeeRepository : IEmployeeRepository
+    {
+        private readonly IEmployeeContext _context;
+
+        public EmployeeRepository(IEmployeeContext context)
+        {
+            _context = context;
+        }
+
+        public Employee GetById(int id)
+        {
+            return _context.Employees.Find(id);
+        }
+
+        public void Delete(Employee employee)
+        {
+            _context.Employees.Remove(employee);
+            _context.SaveChanges();
+        }
+
+        public IEnumerable<Employee> GetAll()
+        {
+            return _context.Employees.ToList();
+        }
+    }
     
-    public class EmployeeContext
+    public interface IEmployeeContext
+    {
+        DbSet<Employee> Employees { get; set; }
+        void SaveChanges();
+    }
+
+    public class EmployeeContext : IEmployeeContext
     {
         public DbSet<Employee> Employees { get; set; }
 

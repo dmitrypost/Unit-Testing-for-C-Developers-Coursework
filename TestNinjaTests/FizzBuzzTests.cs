@@ -39,7 +39,7 @@ namespace TestNinjaTests
             Assert.That(result == "Buzz");
         }
 
-        [TestCase(51)]
+        [TestCase(52)]
         [TestCase(7)]
         [TestCase(22)]
         public void GetOutput_GivenNumberNotDivisibleBy3Or5_ReturnsNumber(int number)
